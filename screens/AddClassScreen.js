@@ -1,25 +1,35 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert } from 'react-native';
+import { addClass } from '../database/db';
 
-export default function AddClassScreen({ navigation, classes, setClasses }) {
+export default function AddClassScreen({ navigation, classes, refreshData }) {
   const [className, setClassName] = useState('');
   const [difficulty, setDifficulty] = useState('Medium');
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleAddClass = () => {
-    if (className.trim()) {
-      // Add new class to the list
-      const newClass = {
-        name: className,
-        difficulty: difficulty,
-        id: Date.now() // Simple unique ID
-      };
+  const handleAddClass = async () => {
+    if (!className.trim()) {
+      Alert.alert('Error', 'Please enter a class name');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      // Save to database
+      await addClass(className.trim(), difficulty);
       
-      setClasses([...classes, newClass]);
+      // Refresh data from database
+      await refreshData();
       
       // Clear form and go back
       setClassName('');
       setDifficulty('Medium');
       navigation.goBack();
+    } catch (error) {
+      Alert.alert('Error', 'Failed to add class. Please try again.');
+      console.error(error);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -42,6 +52,7 @@ export default function AddClassScreen({ navigation, classes, setClasses }) {
           onChangeText={setClassName}
           placeholder="e.g., AP Calculus BC"
           placeholderTextColor="#666"
+          editable={!isSaving}
         />
 
         <Text style={styles.label}>Difficulty Level</Text>
@@ -54,6 +65,7 @@ export default function AddClassScreen({ navigation, classes, setClasses }) {
                 difficulty === level && styles.difficultyButtonActive
               ]}
               onPress={() => setDifficulty(level)}
+              disabled={isSaving}
             >
               <Text style={[
                 styles.difficultyText,
@@ -66,17 +78,20 @@ export default function AddClassScreen({ navigation, classes, setClasses }) {
         </View>
 
         <TouchableOpacity 
-          style={styles.primaryButton}
+          style={[styles.primaryButton, isSaving && styles.buttonDisabled]}
           onPress={handleAddClass}
+          disabled={isSaving}
         >
-          <Text style={styles.buttonText}>Add Class</Text>
+          <Text style={styles.buttonText}>
+            {isSaving ? 'Saving...' : 'Add Class'}
+          </Text>
         </TouchableOpacity>
       </View>
 
       {/* List of existing classes */}
       {classes.length > 0 && (
         <View style={styles.classList}>
-          <Text style={styles.sectionTitle}>Your Classes</Text>
+          <Text style={styles.sectionTitle}>Your Classes ({classes.length})</Text>
           {classes.map((cls) => (
             <View key={cls.id} style={styles.classCard}>
               <Text style={styles.className}>{cls.name}</Text>
@@ -163,6 +178,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     marginTop: 24,
+  },
+  buttonDisabled: {
+    backgroundColor: '#333',
+    opacity: 0.5,
   },
   buttonText: {
     color: '#fff',

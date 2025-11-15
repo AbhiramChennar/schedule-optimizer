@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert } from 'react-native';
+import { addAssignment } from '../database/db';
 
-export default function AddAssignmentScreen({ navigation, classes, assignments, setAssignments }) {
+export default function AddAssignmentScreen({ navigation, classes, refreshData }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [selectedClass, setSelectedClass] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [estimatedTime, setEstimatedTime] = useState('2');
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleAddAssignment = () => {
+  const handleAddAssignment = async () => {
     // Validation
     if (!title.trim()) {
       Alert.alert('Error', 'Please enter an assignment title');
@@ -23,29 +25,36 @@ export default function AddAssignmentScreen({ navigation, classes, assignments, 
       return;
     }
 
-    // Create new assignment object
-    const newAssignment = {
-      id: Date.now(),
-      title: title.trim(),
-      description: description.trim(),
-      className: selectedClass,
-      dueDate: dueDate.trim(),
-      estimatedTime: parseFloat(estimatedTime) || 2,
-      createdAt: new Date().toISOString()
-    };
+    setIsSaving(true);
+    try {
+      // Create assignment object
+      const newAssignment = {
+        title: title.trim(),
+        description: description.trim(),
+        className: selectedClass,
+        dueDate: dueDate.trim(),
+        estimatedTime: parseFloat(estimatedTime) || 2,
+      };
 
-    // Add to assignments list
-    setAssignments([...assignments, newAssignment]);
+      // Save to database
+      await addAssignment(newAssignment);
+      
+      // Refresh data from database
+      await refreshData();
 
-    // Clear form
-    setTitle('');
-    setDescription('');
-    setSelectedClass('');
-    setDueDate('');
-    setEstimatedTime('2');
-
-    // Go back to home
-    navigation.goBack();
+      // Clear form and go back
+      setTitle('');
+      setDescription('');
+      setSelectedClass('');
+      setDueDate('');
+      setEstimatedTime('2');
+      navigation.goBack();
+    } catch (error) {
+      Alert.alert('Error', 'Failed to add assignment. Please try again.');
+      console.error(error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -67,6 +76,7 @@ export default function AddAssignmentScreen({ navigation, classes, assignments, 
           onChangeText={setTitle}
           placeholder="e.g., Chapter 5 Problem Set"
           placeholderTextColor="#666"
+          editable={!isSaving}
         />
 
         <Text style={styles.label}>Description (AI will analyze this later)</Text>
@@ -79,6 +89,7 @@ export default function AddAssignmentScreen({ navigation, classes, assignments, 
           multiline
           numberOfLines={5}
           textAlignVertical="top"
+          editable={!isSaving}
         />
 
         <Text style={styles.label}>Class</Text>
@@ -92,6 +103,7 @@ export default function AddAssignmentScreen({ navigation, classes, assignments, 
                   selectedClass === cls.name && styles.classOptionActive
                 ]}
                 onPress={() => setSelectedClass(cls.name)}
+                disabled={isSaving}
               >
                 <Text style={[
                   styles.classOptionText,
@@ -123,6 +135,7 @@ export default function AddAssignmentScreen({ navigation, classes, assignments, 
           onChangeText={setDueDate}
           placeholder="e.g., Nov 15 or Friday"
           placeholderTextColor="#666"
+          editable={!isSaving}
         />
 
         <Text style={styles.label}>Estimated Time (hours)</Text>
@@ -133,6 +146,7 @@ export default function AddAssignmentScreen({ navigation, classes, assignments, 
           placeholder="2"
           placeholderTextColor="#666"
           keyboardType="numeric"
+          editable={!isSaving}
         />
 
         <Text style={styles.hint}>
@@ -140,11 +154,13 @@ export default function AddAssignmentScreen({ navigation, classes, assignments, 
         </Text>
 
         <TouchableOpacity 
-          style={[styles.primaryButton, classes.length === 0 && styles.buttonDisabled]}
+          style={[styles.primaryButton, (classes.length === 0 || isSaving) && styles.buttonDisabled]}
           onPress={handleAddAssignment}
-          disabled={classes.length === 0}
+          disabled={classes.length === 0 || isSaving}
         >
-          <Text style={styles.buttonText}>Add Assignment</Text>
+          <Text style={styles.buttonText}>
+            {isSaving ? 'Saving...' : 'Add Assignment'}
+          </Text>
         </TouchableOpacity>
       </View>
     </ScrollView>

@@ -1,26 +1,65 @@
-import React, { useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import { useEffect, useState } from 'react';
 
-// Import screens (we'll create these next)
-import HomeScreen from './screens/HomeScreen';
-import AddClassScreen from './screens/AddClassScreen';
+// Import database functions
+import { getAllAssignments, getAllClasses, initDatabase } from './database/db';
+// Import screens
 import AddAssignmentScreen from './screens/AddAssignmentScreen';
+import AddClassScreen from './screens/AddClassScreen';
 import AssignmentListScreen from './screens/AssignmentListScreen';
+import HomeScreen from './screens/HomeScreen';
 
 const Stack = createStackNavigator();
 
 export default function App() {
-  // Global state - stores all your data
-  // Later we'll move this to SQLite database
   const [classes, setClasses] = useState([]);
   const [assignments, setAssignments] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Initialize database and load data on app start
+  useEffect(() => {
+    const setupDatabase = async () => {
+      try {
+        // Initialize database tables
+        await initDatabase();
+        
+        // Load existing data
+        const loadedClasses = await getAllClasses();
+        const loadedAssignments = await getAllAssignments();
+        
+        setClasses(loadedClasses);
+        setAssignments(loadedAssignments);
+        
+        console.log('Loaded classes:', loadedClasses.length);
+        console.log('Loaded assignments:', loadedAssignments.length);
+      } catch (error) {
+        console.error('Error setting up database:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    setupDatabase();
+  }, []);
+
+  // Function to refresh data from database
+  const refreshData = async () => {
+    const loadedClasses = await getAllClasses();
+    const loadedAssignments = await getAllAssignments();
+    setClasses(loadedClasses);
+    setAssignments(loadedAssignments);
+  };
+
+  if (isLoading) {
+    return null; // Or a loading screen
+  }
 
   return (
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
-          headerShown: false, // We'll create custom headers
+          headerShown: false,
           cardStyle: { backgroundColor: '#0a0a0a' }
         }}
       >
@@ -29,6 +68,7 @@ export default function App() {
             <HomeScreen 
               {...props} 
               assignments={assignments}
+              refreshData={refreshData}
             />
           )}
         </Stack.Screen>
@@ -38,7 +78,7 @@ export default function App() {
             <AddClassScreen 
               {...props} 
               classes={classes}
-              setClasses={setClasses}
+              refreshData={refreshData}
             />
           )}
         </Stack.Screen>
@@ -49,7 +89,7 @@ export default function App() {
               {...props} 
               classes={classes}
               assignments={assignments}
-              setAssignments={setAssignments}
+              refreshData={refreshData}
             />
           )}
         </Stack.Screen>
@@ -59,6 +99,7 @@ export default function App() {
             <AssignmentListScreen 
               {...props} 
               assignments={assignments}
+              refreshData={refreshData}
             />
           )}
         </Stack.Screen>
