@@ -29,7 +29,7 @@
       "expo-sqlite"
     ],
     "extra": {
-      "groqApiKey": "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"
+      "groqApiKey": "PLACEHOLDER_KEY"
     }
   }
 }
