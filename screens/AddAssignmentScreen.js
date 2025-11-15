@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { addAssignment } from '../database/db';
+import { analyzeAssignment } from '../services/aiService';
 
 export default function AddAssignmentScreen({ navigation, classes, refreshData }) {
   const [title, setTitle] = useState('');
@@ -9,6 +10,53 @@ export default function AddAssignmentScreen({ navigation, classes, refreshData }
   const [dueDate, setDueDate] = useState('');
   const [estimatedTime, setEstimatedTime] = useState('2');
   const [isSaving, setIsSaving] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [aiAnalysis, setAiAnalysis] = useState(null);
+
+  const handleAnalyzeWithAI = async () => {
+    if (!title.trim()) {
+      Alert.alert('Error', 'Please enter an assignment title first');
+      return;
+    }
+    if (!selectedClass) {
+      Alert.alert('Error', 'Please select a class first');
+      return;
+    }
+
+    setIsAnalyzing(true);
+    try {
+      // Get the class difficulty
+      const classObj = classes.find(c => c.name === selectedClass);
+      const classDifficulty = classObj?.difficulty || 'Medium';
+
+      // Call AI to analyze
+      const analysis = await analyzeAssignment(
+        title,
+        description,
+        selectedClass,
+        classDifficulty
+      );
+
+      if (analysis.success) {
+        // Auto-fill estimated time
+        setEstimatedTime(analysis.estimatedTime.toString());
+        setAiAnalysis(analysis);
+        
+        Alert.alert(
+          'AI Analysis Complete',
+          `Estimated Time: ${analysis.estimatedTime} hours\nDifficulty: ${analysis.difficulty}\n\n${analysis.reasoning}`,
+          [{ text: 'OK' }]
+        );
+      } else {
+        Alert.alert('AI Analysis Failed', 'Using default estimates. You can still add the assignment manually.');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to analyze assignment. Please enter time manually.');
+      console.error(error);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
   const handleAddAssignment = async () => {
     // Validation
@@ -48,6 +96,7 @@ export default function AddAssignmentScreen({ navigation, classes, refreshData }
       setSelectedClass('');
       setDueDate('');
       setEstimatedTime('2');
+      setAiAnalysis(null);
       navigation.goBack();
     } catch (error) {
       Alert.alert('Error', 'Failed to add assignment. Please try again.');
@@ -76,10 +125,10 @@ export default function AddAssignmentScreen({ navigation, classes, refreshData }
           onChangeText={setTitle}
           placeholder="e.g., Chapter 5 Problem Set"
           placeholderTextColor="#666"
-          editable={!isSaving}
+          editable={!isSaving && !isAnalyzing}
         />
 
-        <Text style={styles.label}>Description (AI will analyze this later)</Text>
+        <Text style={styles.label}>Description (AI will analyze this)</Text>
         <TextInput
           style={[styles.input, styles.textArea]}
           value={description}
@@ -89,7 +138,7 @@ export default function AddAssignmentScreen({ navigation, classes, refreshData }
           multiline
           numberOfLines={5}
           textAlignVertical="top"
-          editable={!isSaving}
+          editable={!isSaving && !isAnalyzing}
         />
 
         <Text style={styles.label}>Class</Text>
@@ -103,7 +152,7 @@ export default function AddAssignmentScreen({ navigation, classes, refreshData }
                   selectedClass === cls.name && styles.classOptionActive
                 ]}
                 onPress={() => setSelectedClass(cls.name)}
-                disabled={isSaving}
+                disabled={isSaving || isAnalyzing}
               >
                 <Text style={[
                   styles.classOptionText,
@@ -128,6 +177,39 @@ export default function AddAssignmentScreen({ navigation, classes, refreshData }
           </View>
         )}
 
+        {/* AI Analysis Button */}
+        <TouchableOpacity 
+          style={[styles.aiButton, (isAnalyzing || !title || !selectedClass) && styles.buttonDisabled]}
+          onPress={handleAnalyzeWithAI}
+          disabled={isAnalyzing || !title || !selectedClass}
+        >
+          {isAnalyzing ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <>
+              <Text style={styles.aiButtonIcon}>✨</Text>
+              <Text style={styles.aiButtonText}>Analyze with AI</Text>
+            </>
+          )}
+        </TouchableOpacity>
+
+        {/* Show AI Analysis Results */}
+        {aiAnalysis && aiAnalysis.success && (
+          <View style={styles.aiResultBox}>
+            <Text style={styles.aiResultTitle}>AI Analysis:</Text>
+            <Text style={styles.aiResultText}>• Estimated: {aiAnalysis.estimatedTime} hours</Text>
+            <Text style={styles.aiResultText}>• Difficulty: {aiAnalysis.difficulty}</Text>
+            {aiAnalysis.keyTasks && aiAnalysis.keyTasks.length > 0 && (
+              <>
+                <Text style={styles.aiResultText}>• Key tasks:</Text>
+                {aiAnalysis.keyTasks.map((task, i) => (
+                  <Text key={i} style={styles.aiTaskText}>  - {task}</Text>
+                ))}
+              </>
+            )}
+          </View>
+        )}
+
         <Text style={styles.label}>Due Date</Text>
         <TextInput
           style={styles.input}
@@ -135,7 +217,7 @@ export default function AddAssignmentScreen({ navigation, classes, refreshData }
           onChangeText={setDueDate}
           placeholder="e.g., Nov 15 or Friday"
           placeholderTextColor="#666"
-          editable={!isSaving}
+          editable={!isSaving && !isAnalyzing}
         />
 
         <Text style={styles.label}>Estimated Time (hours)</Text>
@@ -146,17 +228,13 @@ export default function AddAssignmentScreen({ navigation, classes, refreshData }
           placeholder="2"
           placeholderTextColor="#666"
           keyboardType="numeric"
-          editable={!isSaving}
+          editable={!isSaving && !isAnalyzing}
         />
 
-        <Text style={styles.hint}>
-          💡 Tip: AI will eventually estimate this automatically from your description
-        </Text>
-
         <TouchableOpacity 
-          style={[styles.primaryButton, (classes.length === 0 || isSaving) && styles.buttonDisabled]}
+          style={[styles.primaryButton, (classes.length === 0 || isSaving || isAnalyzing) && styles.buttonDisabled]}
           onPress={handleAddAssignment}
-          disabled={classes.length === 0 || isSaving}
+          disabled={classes.length === 0 || isSaving || isAnalyzing}
         >
           <Text style={styles.buttonText}>
             {isSaving ? 'Saving...' : 'Add Assignment'}
@@ -256,11 +334,47 @@ const styles = StyleSheet.create({
     color: '#000',
     fontWeight: '600',
   },
-  hint: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 8,
-    fontStyle: 'italic',
+  aiButton: {
+    backgroundColor: '#9333ea',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 20,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  aiButtonIcon: {
+    fontSize: 20,
+  },
+  aiButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  aiResultBox: {
+    backgroundColor: '#1a1a2e',
+    padding: 16,
+    borderRadius: 8,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: '#9333ea',
+  },
+  aiResultTitle: {
+    color: '#9333ea',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  aiResultText: {
+    color: '#ccc',
+    fontSize: 14,
+    marginBottom: 4,
+  },
+  aiTaskText: {
+    color: '#aaa',
+    fontSize: 13,
+    marginBottom: 2,
   },
   primaryButton: {
     backgroundColor: '#4a9eff',
