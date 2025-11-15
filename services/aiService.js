@@ -1,7 +1,8 @@
 import axios from 'axios';
+import Constants from 'expo-constants';
 
 // Replace with your Groq API key
-const GROQ_API_KEY = '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';
+const GROQ_API_KEY = Constants.expoConfig?.extra?.groqApiKey || 'fallback-key';
 
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
