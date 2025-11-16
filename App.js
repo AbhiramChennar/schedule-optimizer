@@ -8,6 +8,7 @@ import { getAllAssignments, getAllClasses, initDatabase } from './database/db';
 import AddAssignmentScreen from './screens/AddAssignmentScreen';
 import AddClassScreen from './screens/AddClassScreen';
 import AssignmentListScreen from './screens/AssignmentListScreen';
+import CalendarScreen from './screens/CalendarScreen';
 import HomeScreen from './screens/HomeScreen';
 
 const Stack = createStackNavigator();
@@ -100,6 +101,15 @@ export default function App() {
               {...props} 
               assignments={assignments}
               refreshData={refreshData}
+            />
+          )}
+        </Stack.Screen>
+
+        <Stack.Screen name="Calendar">
+          {props => (
+            <CalendarScreen 
+              {...props} 
+              assignments={assignments}
             />
           )}
         </Stack.Screen>

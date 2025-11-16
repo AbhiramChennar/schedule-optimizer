@@ -67,6 +67,13 @@ export default function HomeScreen({ navigation, assignments }) {
         
         <TouchableOpacity 
           style={styles.secondaryButton}
+          onPress={() => navigation.navigate('Calendar')}
+        >
+          <Text style={styles.buttonTextSecondary}>📅 View Calendar</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.secondaryButton}
           onPress={() => navigation.navigate('AddClass')}
         >
           <Text style={styles.buttonTextSecondary}>+ Add Class</Text>
