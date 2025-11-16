@@ -27,9 +27,6 @@
     },
     "plugins": [
       "expo-sqlite"
-    ],
-    "extra": {
-      "groqApiKey": "PLACEHOLDER_KEY"
-    }
+    ]
   }
 }
