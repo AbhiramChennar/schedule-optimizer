@@ -25,10 +25,27 @@ export const initDatabase = async () => {
         class_name TEXT NOT NULL,
         due_date TEXT NOT NULL,
         estimated_time REAL DEFAULT 2,
+        actual_time REAL,
         completed INTEGER DEFAULT 0,
+        completed_at DATETIME,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
     `);
+
+    // Migration: Add new columns if they don't exist
+    try {
+      await db.execAsync(`ALTER TABLE assignments ADD COLUMN actual_time REAL;`);
+      console.log('Added actual_time column');
+    } catch (e) {
+      // Column already exists, ignore error
+    }
+    
+    try {
+      await db.execAsync(`ALTER TABLE assignments ADD COLUMN completed_at DATETIME;`);
+      console.log('Added completed_at column');
+    } catch (e) {
+      // Column already exists, ignore error
+    }
 
     console.log('Database initialized successfully');
   } catch (error) {
@@ -168,12 +185,37 @@ export const deleteAssignment = async (id) => {
   }
 };
 
-export const markAssignmentComplete = async (id) => {
+export const markAssignmentComplete = async (id, actualTime) => {
   try {
-    await db.runAsync('UPDATE assignments SET completed = 1 WHERE id = ?', [id]);
+    await db.runAsync(
+      'UPDATE assignments SET completed = 1, actual_time = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [actualTime, id]
+    );
     return true;
   } catch (error) {
     console.error('Error marking assignment complete:', error);
     return false;
+  }
+};
+
+export const getCompletedAssignments = async () => {
+  try {
+    const assignments = await db.getAllAsync(
+      'SELECT * FROM assignments WHERE completed = 1 ORDER BY completed_at DESC'
+    );
+    return assignments.map(a => ({
+      id: a.id,
+      title: a.title,
+      description: a.description,
+      className: a.class_name,
+      dueDate: a.due_date,
+      estimatedTime: a.estimated_time,
+      actualTime: a.actual_time,
+      completed: true,
+      completedAt: a.completed_at
+    }));
+  } catch (error) {
+    console.error('Error getting completed assignments:', error);
+    return [];
   }
 };
