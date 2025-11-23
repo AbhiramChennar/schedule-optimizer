@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { addAssignment } from '../database/db';
+import { getAccuracyStats } from '../database/db';
 import { analyzeAssignment } from '../services/aiService';
 
 export default function AddAssignmentScreen({ navigation, classes, refreshData }) {

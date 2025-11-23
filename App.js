@@ -9,7 +9,12 @@ import AddAssignmentScreen from './screens/AddAssignmentScreen';
 import AddClassScreen from './screens/AddClassScreen';
 import AssignmentListScreen from './screens/AssignmentListScreen';
 import CalendarScreen from './screens/CalendarScreen';
+import ChatScreen from './screens/ChatScreen';
 import HomeScreen from './screens/HomeScreen';
+import StatsScreen from './screens/StatsScreen';
+import StudyModeScreen from './screens/StudyModeScreen';
+import SessionReviewScreen from './screens/SessionReviewScreen';
+import StudyChatScreen from './screens/StudyChatScreen';
 
 const Stack = createStackNavigator();
 
@@ -110,6 +115,47 @@ export default function App() {
             <CalendarScreen 
               {...props} 
               assignments={assignments}
+            />
+          )}
+        </Stack.Screen>
+
+        <Stack.Screen name="Stats">
+          {props => (
+            <StatsScreen 
+              {...props}
+            />
+          )}
+        </Stack.Screen>
+
+        <Stack.Screen name="Chat">
+          {props => (
+            <ChatScreen 
+              {...props}
+              assignments={assignments}
+              classes={classes}
+            />
+          )}
+        </Stack.Screen>
+        <Stack.Screen name="StudyMode">
+          {props => (
+            <StudyModeScreen 
+              {...props}
+            />
+          )}
+        </Stack.Screen>
+
+        <Stack.Screen name="SessionReview">
+          {props => (
+            <SessionReviewScreen 
+              {...props}
+            />
+          )}
+        </Stack.Screen>
+
+        <Stack.Screen name="StudyChat">
+          {props => (
+            <StudyChatScreen 
+              {...props}
             />
           )}
         </Stack.Screen>

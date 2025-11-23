@@ -152,11 +152,16 @@ export default function CalendarScreen({ navigation, assignments }) {
         <View style={styles.detailsSection}>
           <View style={styles.dateHeader}>
             <Text style={styles.dateTitle}>
-              {new Date(selectedDate).toLocaleDateString('en-US', { 
-                weekday: 'long',
-                month: 'long', 
-                day: 'numeric' 
-              })}
+              {(() => {
+                const [year, month, day] = selectedDate.split('-').map(Number);
+                const date = new Date(year, month - 1, day, 12, 0, 0);
+                return date.toLocaleDateString('en-US', { 
+                  weekday: 'long',
+                  month: 'long', 
+                  day: 'numeric',
+                  year: 'numeric'
+                });
+              })()}
             </Text>
             {totalTimeForDate > 0 && (
               <View style={styles.totalTimeChip}>

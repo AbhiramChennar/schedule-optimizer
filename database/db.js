@@ -219,3 +219,52 @@ export const getCompletedAssignments = async () => {
     return [];
   }
 };
+
+// Get accuracy statistics for AI learning
+export const getAccuracyStats = async () => {
+  try {
+    const completed = await db.getAllAsync(
+      `SELECT 
+        class_name,
+        AVG(actual_time) as avg_actual,
+        AVG(estimated_time) as avg_estimated,
+        AVG(actual_time - estimated_time) as avg_difference,
+        COUNT(*) as count
+       FROM assignments 
+       WHERE completed = 1 AND actual_time IS NOT NULL
+       GROUP BY class_name`
+    );
+    
+    const overall = await db.getFirstAsync(
+      `SELECT 
+        AVG(actual_time) as avg_actual,
+        AVG(estimated_time) as avg_estimated,
+        COUNT(*) as total_count,
+        SUM(CASE WHEN ABS(actual_time - estimated_time) <= 0.5 THEN 1 ELSE 0 END) as accurate_count
+       FROM assignments 
+       WHERE completed = 1 AND actual_time IS NOT NULL`
+    );
+    
+    return {
+      byClass: completed.map(c => ({
+        className: c.class_name,
+        avgActual: c.avg_actual,
+        avgEstimated: c.avg_estimated,
+        avgDifference: c.avg_difference,
+        count: c.count
+      })),
+      overall: {
+        avgActual: overall?.avg_actual || 0,
+        avgEstimated: overall?.avg_estimated || 0,
+        totalCount: overall?.total_count || 0,
+        accurateCount: overall?.accurate_count || 0,
+        accuracyRate: overall?.total_count > 0 
+          ? (overall.accurate_count / overall.total_count * 100).toFixed(1)
+          : 0
+      }
+    };
+  } catch (error) {
+    console.error('Error getting accuracy stats:', error);
+    return { byClass: [], overall: { totalCount: 0 } };
+  }
+};
