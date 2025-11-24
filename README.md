@@ -71,7 +71,13 @@ Schedule Optimizer uses adaptive AI to:
 
 ## 🎨 Screenshots
 
-To be added
+<img width="1170" height="2532" alt="IMG_3550" src="https://github.com/user-attachments/assets/e43866d1-c1ba-4b1d-a041-ee25caabea64" />
+<img width="1170" height="2532" alt="IMG_3552" src="https://github.com/user-attachments/assets/0b3a37e5-457f-485b-9462-2d4f64a2385b" />
+<img width="1170" height="2532" alt="IMG_3553" src="https://github.com/user-attachments/assets/3ab67f1d-86bc-462f-a0d9-79b544b508c9" />
+<img width="1170" height="2532" alt="IMG_3554" src="https://github.com/user-attachments/assets/9c955503-edad-4564-a224-08ad7637d459" />
+<img width="1170" height="2532" alt="IMG_3555" src="https://github.com/user-attachments/assets/edc42347-907a-452d-967c-80e5fda0b736" />
+<img width="1170" height="2532" alt="IMG_3556" src="https://github.com/user-attachments/assets/9a996a3a-afe1-4b6c-a78d-98ec028b7f0c" />
+
 
 ## 🧠 How the AI Works
 
