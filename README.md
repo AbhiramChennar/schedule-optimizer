@@ -94,10 +94,6 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 📝 License
-
-This project is licensed under the MIT License - see the file for details.
-
 ## 👨‍💻 About the Developer
 
 Created by Abhiram Chennareddygari as part of a college application portfolio project. This app represents my passion for using AI to solve real world problems that students (including myself!) face daily.
