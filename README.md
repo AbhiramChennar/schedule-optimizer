@@ -2,7 +2,6 @@
 
 > An intelligent study companion that learns your habits and helps you manage assignments efficiently
 
-[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
 [![Expo](https://img.shields.io/badge/Built%20with-Expo-000000?logo=expo)](https://expo.dev/)
 [![React Native](https://img.shields.io/badge/React%20Native-61DAFB?logo=react&logoColor=white)](https://reactnative.dev/)
 
